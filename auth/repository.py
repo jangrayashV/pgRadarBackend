@@ -132,54 +132,7 @@ class AuthRepository:
         )
 
     
-    
-    
 
-    async def create_password_reset(
-        self,
-        user_id: uuid.UUID,
-        otp_hash: str,
-        expires_at: datetime,
-    ) -> PasswordReset:
-        # invalidate any existing unused resets for this user
-        await self.db.execute(
-            delete(PasswordReset).where(
-                PasswordReset.user_id == user_id,
-                PasswordReset.used_at.is_(None),
-            )
-        )
-        reset = PasswordReset(user_id=user_id, otp_hash=otp_hash, expires_at=expires_at)
-        self.db.add(reset)
-        await self.db.flush()
-        return reset
-
-    async def get_active_password_reset(self, user_id: uuid.UUID) -> PasswordReset | None:
-        result = await self.db.execute(
-            select(PasswordReset)
-            .where(
-                PasswordReset.user_id == user_id,
-                PasswordReset.used_at.is_(None),
-            )
-            .order_by(PasswordReset.created_at.desc())
-        )
-        return result.scalar_one_or_none()
-
-    async def increment_reset_attempts(self, reset_id: uuid.UUID) -> int:
-        result = await self.db.execute(
-            update(PasswordReset)
-            .where(PasswordReset.id == reset_id)
-            .values(attempts=PasswordReset.attempts + 1)
-            .returning(PasswordReset.attempts)
-        )
-        return result.scalar_one()
-
-    async def mark_password_reset_used(self, reset_id: uuid.UUID) -> None:
-        await self.db.execute(
-            update(PasswordReset)
-            .where(PasswordReset.id == reset_id)
-            .values(used_at=datetime.now(timezone.utc))
-        )
-        
     async def create_verification_code(self, phone: str, code_hash: str):
         entry = VerificationCode(
             phone=phone,
