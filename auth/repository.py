@@ -37,7 +37,6 @@ class AuthRepository:
     async def create(
         self,
         phone: str,
-        password_hash: str,
         full_name: str,
         role: str,
         email: str | None = None,
@@ -45,7 +44,6 @@ class AuthRepository:
         user = User(
             phone=phone,
             email=email,
-            password_hash=password_hash,
             full_name=full_name,
             role=role,
         )
@@ -59,14 +57,6 @@ class AuthRepository:
             .where(User.id == user_id)
             .values(last_login_at=datetime.now(timezone.utc))
         )
-
-    async def update_password(self, user_id: uuid.UUID, password_hash: str) -> None:
-        await self.db.execute(
-            update(User)
-            .where(User.id == user_id)
-            .values(password_hash=password_hash)
-        )
-
 
 
 
