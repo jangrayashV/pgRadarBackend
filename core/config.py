@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     PASSWORD_PEPPER: str
 
     def get_database_url(self) -> str:
-        return DATABASE_URL
+        return f"{self.DATABASE_URL}"
 
     class Config:
         env_file = ".env"
