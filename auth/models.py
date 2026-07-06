@@ -96,58 +96,6 @@ class RefreshToken(Base):
  
     user: Mapped["User"] = relationship(back_populates="refresh_tokens")
 
-# class PasswordReset(Base):
-    __tablename__ = "password_resets"
- 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    otp_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
- 
-    user: Mapped["User"] = relationship(back_populates="password_resets")
- 
-    def __repr__(self) -> str:
-        return f"<PasswordReset user_id={self.user_id} used={self.used_at is not None}>"
-    __tablename__ = "password_resets"
- 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default=uuid.uuid4,
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    otp_hash: Mapped[str] = mapped_column(
-        String(64),
-        unique=True,
-        nullable=False,
-    )
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-    )
-    used_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    attempts: Mapped[int] = mapped_column(
-        Integer,
-        nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-    )
- 
-    user: Mapped["User"] = relationship(back_populates="password_resets")
 
 class VerificationCode(Base):
     __tablename__="verification_codes"
