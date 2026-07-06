@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    DATABASE_USER: str
-    DATABASE_PASSWORD: str
-    DATABASE_HOST: str
-    DATABASE_PORT: int
-    DATABASE_NAME: str
+    # DATABASE_USER: str
+    # DATABASE_PASSWORD: str
+    # DATABASE_HOST: str
+    # DATABASE_PORT: int
+    # DATABASE_NAME: str
+    DATABASE_URL: str
     ACCESS_TOKEN_SECRET_KEY: str
     REFRESH_TOKEN_SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     PASSWORD_PEPPER: str
 
     def get_database_url(self) -> str:
-        return f"postgresql+asyncpg://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
+        return DATABASE_URL
 
     class Config:
         env_file = ".env"
