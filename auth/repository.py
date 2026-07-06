@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.models import PasswordReset, RefreshToken, User
+from auth.models import RefreshToken, User
 
 
 class AuthRepository:
