@@ -25,12 +25,12 @@ async def get_current_user(token: str = Depends(bearer_scheme), db: AsyncSession
         raise TokenError("User not found")  
     return user 
 
-async def get_owner(user: dict = Depends(get_current_user)) -> dict:
+async def require_owner(user: dict = Depends(get_current_user)) -> dict:
     if user.role!= "owner":
         raise HTTPException(403, "Owners only")
     return user
 
-async def get_tenant(user: dict = Depends(get_current_user)) -> dict:
+async def require_tenant(user: dict = Depends(get_current_user)) -> dict:
     if user.role != "tenant":
         raise HTTPException(403, "Tenants only")
     return user

@@ -1,32 +1,59 @@
-from buildings.schemas import BuildingCreate, BuildingUpdate
-from core.dependencies import get_owner
-from fastapi import Depends, HTTPException
 from buildings.repository import BuildingRepository
 from sqlalchemy.ext.asyncio import AsyncSession
-from auth.models import User
+import logging
+import uuid as uuid_module
+from core.exceptions import NotFoundError, ForbiddenError
 
+logger = logging.getLogger(__name__)
+ 
+ 
 class BuildingService:
     def __init__(self, db: AsyncSession):
         self.repo = BuildingRepository(db)
-
-    async def create_building(self, building_data:BuildingCreate, owner: User = Depends(get_owner)):
-        new_building = await self.repo.add_building(name=building_data.name, address=building_data.address, is_active=building_data.is_active, owner_id=owner.id, capacity=building_data.capacity)
-        return new_building
-        
-
-    async def get_building(self, building_id):
-        building = await self.repo.get_building(building_id)
+ 
+    async def _get_owned_building(self, building_id: uuid_module.UUID, owner_id: uuid_module.UUID):
+        """Fetch building and verify ownership. Raises if not found or not owned."""
+        building = await self.repo.get_by_id(building_id)
         if not building:
-            raise HTTPException(404, detail="building doesn't exist")
+            raise NotFoundError("Building not found")
+        if building.owner_id != owner_id:
+            raise ForbiddenError("You do not own this building")
         return building
-
-    async def update_building(self, building_id, building_data: BuildingUpdate):
-        building = await self.repo.get_building(building_id)
-        if not building:
-            raise HTTPException(404, detail="building doesn't exist")
-        new_update = await self.repo.update_building(building_id, building_data)
-        return new_update
-
-    async def delete_building(self, building_id):
-        # Logic to delete a building from the database
-        pass
+ 
+    async def create(
+        self,
+        owner_id: uuid_module.UUID,
+        name: str,
+        address: str,
+        city: str,
+        state: str,
+    ):
+        building = await self.repo.create(owner_id=owner_id, name=name, address=address, city=city, state=state)
+        logger.info("Building created: %s by owner: %s", building.id, owner_id)
+        return building
+ 
+    async def get_all(self, owner_id: uuid_module.UUID) -> list:
+        return await self.repo.get_all_by_owner(owner_id)
+ 
+    async def get_one(self, building_id: uuid_module.UUID, owner_id: uuid_module.UUID):
+        return await self._get_owned_building(building_id, owner_id)
+ 
+    async def update(
+        self,
+        building_id: uuid_module.UUID,
+        owner_id: uuid_module.UUID,
+        name: str | None = None,
+        address: str | None = None,
+        city: str | None = None,
+        state: str | None = None,
+    ):
+        building = await self._get_owned_building(building_id, owner_id)
+        await self.repo.update(building_id, name=name, address=address, city=city, state=state)
+        return building
+ 
+    async def delete(self, building_id: uuid_module.UUID, owner_id: uuid_module.UUID) -> None:
+        await self._get_owned_building(building_id, owner_id)
+        await self.repo.delete(building_id)
+        logger.info("Building deleted: %s", building_id)
+ 
+ 
