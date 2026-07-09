@@ -1,46 +1,62 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timezone
-from rent.models import RentEntries
-from sqlalchemy import select
+from rent.models import RentEntry
+from sqlalchemy import select, update
+import uuid as _uuid
+
 
 class RentRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
-        
-    async def get_entry(self, entry_id):
-        existing_entry = await self.db.execute(select(RentEntries).where(RentEntries.id == entry_id))
-        entry = existing_entry.scalar_one_or_none()
-        return entry
-    
-    async def get_unpaid_entries(self, tenant_id):
-        result = await self.db.execute(
-            select(RentEntries).where(
-                RentEntries.tenant_id == tenant_id,
-                RentEntries.paid_at.is_(None)
-            )
-        )
-        return result.scalars().all()   
-    
-    async def add_rent_entry(self, tenant_id, room_id, owner_id, rent, paid_at):
-        new_entry = RentEntries(
+ 
+    async def create(
+        self,
+        tenant_id: _uuid.UUID,
+        room_id: _uuid.UUID,
+        owner_id: _uuid.UUID,
+        amount: float,
+        due_date: datetime,
+        paid_at: datetime | None = None,
+    ) -> RentEntry:
+        entry = RentEntry(
             tenant_id=tenant_id,
             room_id=room_id,
             owner_id=owner_id,
-            rent=rent,
-            paid_at=paid_at
+            amount=amount,
+            due_date=due_date,
+            paid_at=paid_at,
         )
-        
-        self.db.add(new_entry)
-        await self.db.commit()
-        await self.db.refresh(new_entry)
-        return new_entry
-    
-    async def mark_paid(self, entry_id):
-        existing_entry = await self.get_entry(entry_id)
-        
-        existing_entry.paid_at = datetime.now(timezone.utc)
-        
+        self.db.add(entry)
         await self.db.flush()
-        await self.db.refresh(existing_entry)
-        return existing_entry
-        
+        return entry
+ 
+    async def get_by_id(self, entry_id: _uuid.UUID) -> RentEntry | None:
+        result = await self.db.execute(select(RentEntry).where(RentEntry.id == entry_id))
+        return result.scalar_one_or_none()
+ 
+    async def get_unpaid_by_tenant(self, tenant_id: _uuid.UUID) -> list[RentEntry]:
+        result = await self.db.execute(
+            select(RentEntry).where(
+                RentEntry.tenant_id == tenant_id,
+                RentEntry.paid_at.is_(None),
+            ).order_by(RentEntry.due_date.asc())
+        )
+        return list(result.scalars().all())
+ 
+    async def get_unpaid_by_room(self, room_id: _uuid.UUID) -> list[RentEntry]:
+        result = await self.db.execute(
+            select(RentEntry).where(
+                RentEntry.room_id == room_id,
+                RentEntry.paid_at.is_(None),
+            )
+        )
+        return list(result.scalars().all())
+ 
+    async def mark_paid(self, entry_id: _uuid.UUID) -> None:
+        await self.db.execute(
+            update(RentEntry)
+            .where(RentEntry.id == entry_id)
+            .values(paid_at=datetime.now(timezone.utc))
+        )
+ 
+ 
