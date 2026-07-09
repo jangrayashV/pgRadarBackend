@@ -1,14 +1,11 @@
-from urllib import response
-
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
-from auth.schemas import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse,VerificationCodeRequest, VerificationCodeResponse, VerifyVerificationCodeRequest, LogoutResponse, UserResponse
+from auth.schemas import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse,VerificationCodeRequest, VerificationCodeResponse, LogoutResponse, UserResponse
 from auth.service import AuthService
 from core.db import get_db
 from core.rate_limiter import limiter
-from core.dependencies import get_current_user, get_owner, get_tenant
+from core.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -29,35 +26,6 @@ async def register(
         user=user
     )
  
-
-# @router.post("/register")
-# async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)) -> RegisterResponse:
-#     auth_context = AuthService(db)
-#     result = await auth_context.register(
-#         phone=body.phone,
-#         plain_password=body.password,
-#         role=body.role,
-#         full_name=body.full_name,
-#         email=body.email
-#         )
-#     return RegisterResponse(
-#         id=str(result.id),
-#         full_name=result.full_name,
-#         message="User registered successfully", 
-#         role=result.role
-#     )
-
-# @router.post("/login/password")
-# async def login_by_password(cred: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> LoginResponse:
-    auth_context = AuthService(db)
-    result = await auth_context.login_by_password(
-        phone=cred.username,
-        plain_password=cred.password
-        )
-    return LoginResponse(
-        access_token=result["access_token"],
-        message="Login successful"
-    )
 
 @router.post("/login/otp/request")
 @limiter.limit("3/minute")

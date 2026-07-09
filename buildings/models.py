@@ -2,12 +2,9 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     UUID,
-    Select,
     ForeignKey,
     String,
     DateTime,
-    Integer,
-    Boolean,
     func
     )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -27,7 +24,7 @@ class Building(Base):
     state: Mapped[str] = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
- 
+    
     rooms: Mapped[list["Room"]] = relationship("Room", back_populates="building", cascade="all, delete-orphan")
  
     def __repr__(self) -> str:

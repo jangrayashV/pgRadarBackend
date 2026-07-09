@@ -1,6 +1,4 @@
-import hashlib
 import logging
-import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
  
@@ -183,36 +181,8 @@ class AuthService:
         
         verification_code = f"{secrets.randbelow(1_000_000):06d}"
         
-        await self.repo.create_verification_code(phone=phone, code_hash=verification_code)
+        await self.repo.create_verification_code(phone=phone, code_hash=hash_otp(verification_code))
         
         return verification_code
         
-    async def login_by_verification_code(self, phone: str, verification_code: str):
-        existing_user = await self.get_user("phone", phone)
-        if not existing_user:
-            raise NotFoundError("User not found")
-        
-        verification_code_entry = await self.repo.get_verification_code(phone)
-        if not verification_code_entry:
-            raise NotFoundError("Verification code not found")
-        current_time = datetime.now(timezone.utc)
-        if current_time > verification_code_entry.expires_at:
-            raise NotFoundError("Verification code is expired")
-        
-        if verification_code_entry.code_hash != verification_code:
-            return {"message": "invalid verification code"}
-        
-        access_token = create_access_token(str(existing_user.id), existing_user.phone, existing_user.role.value)
-        refresh_token, jti = create_refresh_token(str(existing_user.id))
-        
-        refresh_token_entry = await self.repo.create_refresh_token_entry(
-            user_id=existing_user.id,
-            jti=jti,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        )
-        
-        return {
-            "access_token": access_token,
-            "token_type": "bearer",
-            "refresh_token": refresh_token,
-        }
+   
