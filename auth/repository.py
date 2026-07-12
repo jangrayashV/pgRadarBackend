@@ -117,11 +117,13 @@ class AuthRepository:
         await self.db.execute(
             delete(RefreshToken).where(RefreshToken.jti == jti)
         )
+        await self.db.flush()
 
     async def delete_all_refresh_tokens(self, user_id: uuid.UUID) -> None:
         await self.db.execute(
             delete(RefreshToken).where(RefreshToken.user_id == user_id)
         )
+        await self.db.flush()
 
     
 
