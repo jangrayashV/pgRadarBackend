@@ -120,7 +120,7 @@ app.include_router(rooms_router, prefix="/rooms", tags=["rooms"])
 app.include_router(rent_router, prefix="/rent", tags=["rent_entries"])
 
  
-@app.get("/health")
+@app.get("/")
 async def health():
     return {"status": "ok"}
  
