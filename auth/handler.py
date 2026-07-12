@@ -28,7 +28,7 @@ async def register(
  
 
 @router.post("/login/otp/request")
-@limiter.limit("3/minute")
+# @limiter.limit("3/minute")
 async def request_otp(cred: VerificationCodeRequest, request: Request, db: AsyncSession = Depends(get_db)) -> VerificationCodeResponse:
     auth_context = AuthService(db)
     verification_code = await auth_context.create_verification_code(phone=cred.phone) 
