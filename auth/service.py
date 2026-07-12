@@ -71,14 +71,18 @@ class AuthService:
         if user.locked_until and user.locked_until > now:
             minutes_left = int((user.locked_until - now).total_seconds() / 60)
             raise AccountLockedError(minutes_left)
- 
-        if not verify_otp(otp, user.otp_hash):
-            attempts = await self.repo.increment_failed_attempts(user.id)
-            if attempts >= settings.MAX_FAILED_ATTEMPTS:
-                locked_until = now + timedelta(minutes=settings.LOCKOUT_DURATION_MINS)
+
+        otp_hash = await self.repo.get_verification_code(phone)
+        print("---------------------------------------------otp hash------------------------------------------", otp_hash)
+        print(verify_otp(otp, otp_hash.code_hash))
+        if not verify_otp(otp, otp_hash.code_hash):
+            attempts = await self.repo.increment_failed_attempts(user.id) if attempts < 3 else 3
+            print("---------------------------------------------failed attempts------------------------------------------", attempts)
+            if attempts >= 3:
+                locked_until = now + timedelta(minutes=30)
                 await self.repo.lock_account(user.id, locked_until)
-                raise AccountLockedError(settings.LOCKOUT_DURATION_MINS)
-            remaining = settings.MAX_FAILED_ATTEMPTS - attempts
+                raise AccountLockedError(30)
+            remaining = 3 - attempts
             raise AuthError(f"Invalid credentials. {remaining} attempts remaining.")
  
         await self.repo.reset_failed_attempts(user.id)
@@ -92,11 +96,13 @@ class AuthService:
         refresh_token, jti = create_refresh_token(user_id=str(user.id))
  
         expires_at = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
         await self.repo.create_refresh_token(
             user_id=user.id,
             jti=jti,
             expires_at=expires_at,
         )
+
  
         logger.info("User logged in: %s", phone)
         return user, access_token, refresh_token
@@ -174,7 +180,7 @@ class AuthService:
         return user
         
     async def create_verification_code(self, phone: str):
-        existing_user = await self.get_user("phone", phone)
+        existing_user = await self.repo.get_by_phone(phone)
         if not existing_user:
             raise NotFoundError("User not found")
         import secrets

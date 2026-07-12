@@ -6,6 +6,8 @@ from core.db import engine
 from core.db import Base
 from auth import models as auth_models
 from buildings import models as building_models
+from rooms import models as room_models          
+from rent import models as rent_models  
 from auth.handler import router as auth_router
 from buildings.handlers import router as buildings_router
 from rooms.handler import router as rooms_router
@@ -88,7 +90,9 @@ async def generate_monthly_rent():
 async def lifespan(app: FastAPI):
     # create all tables on startup
     async with engine.begin() as conn:
+        print("CREATING TABLES")
         await conn.run_sync(Base.metadata.create_all)
+        print("TABLES CREATED")
 
     scheduler.add_job(
         generate_monthly_rent,

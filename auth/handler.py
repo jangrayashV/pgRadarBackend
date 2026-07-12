@@ -23,7 +23,7 @@ async def register(
     )
     return RegisterResponse(
         message="Registration successful.",
-        user=user
+        user=UserResponse.model_validate(user)
     )
  
 
@@ -59,6 +59,7 @@ async def logout(
     db: AsyncSession = Depends(get_db),
 ) -> LogoutResponse:
     service = AuthService(db)
+    print("---------------------------------------------------------------------------------",type(user))
     jti = user.get("jti")
     if jti:
         await service.logout(jti)

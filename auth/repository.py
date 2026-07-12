@@ -70,6 +70,7 @@ class AuthRepository:
             )
             .returning(User.failed_login_attempts)
         )
+        await self.db.commit()
         return result.scalar_one()
 
     async def lock_account(self, user_id: uuid.UUID, locked_until: datetime) -> None:
@@ -78,6 +79,7 @@ class AuthRepository:
             .where(User.id == user_id)
             .values(locked_until=locked_until)
         )
+        await self.db.commit()
 
     async def reset_failed_attempts(self, user_id: uuid.UUID) -> None:
         await self.db.execute(

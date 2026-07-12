@@ -1,13 +1,9 @@
 from rooms.repository import RoomRepository
 from buildings.service import BuildingService
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends, HTTPException
-from rooms.schemas import RoomCreate, RoomUpdate
-from auth.models import User
-from core.dependencies import get_owner
+from fastapi import Depends
+from core.dependencies import require_owner
 from auth.service import AuthService
-from auth.schemas import RegisterRequest
-from rent.schemas import RentEntryRequest
 import logging
 from core.exceptions import NotFoundError, ForbiddenError, ValidationError
 import uuid

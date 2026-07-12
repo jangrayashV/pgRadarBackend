@@ -1,3 +1,4 @@
+from __future__ import annotations
 from core.db import Base
 from sqlalchemy import (
     Boolean,
@@ -11,9 +12,11 @@ from sqlalchemy import (
 )
 import uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
-from auth.models import User
-from buildings.models import Building
+import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from buildings.models import Building  # only imported during type checking, not at runtime
 
 
 class Room(Base):
@@ -44,7 +47,7 @@ class RoomUserAssociation(Base):
     tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"))
     tenant_rent: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    vacated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)  
+    vacated_at: Mapped[datetime.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)  
     assigned_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

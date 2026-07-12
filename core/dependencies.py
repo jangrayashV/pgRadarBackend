@@ -1,5 +1,5 @@
 from fastapi import Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPAuthorizationCredentials
 from sqlalchemy import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
@@ -10,11 +10,10 @@ from fastapi.security import HTTPBearer
 
 bearer_scheme = HTTPBearer()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login/password")# for password login
 
-async def get_current_user(token: str = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)):
-    payload = verify_access_token(token)
-    
+async def get_current_user(token: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)):
+    payload = verify_access_token(token.credentials)
+    print("----------------------------------------------------payload------------------------------------------", payload)
     sub = payload.get("sub")
     if not sub:
         raise TokenError("Token missing subject claim")
@@ -23,7 +22,8 @@ async def get_current_user(token: str = Depends(bearer_scheme), db: AsyncSession
     user = result.scalar_one_or_none()
     if not user:
         raise TokenError("User not found")  
-    return user 
+    return payload 
+
 
 async def require_owner(user: dict = Depends(get_current_user)) -> dict:
     if user.role!= "owner":

@@ -1,5 +1,6 @@
+from __future__ import annotations
 import uuid
-from datetime import datetime
+import datetime
 from sqlalchemy import (
     UUID,
     ForeignKey,
@@ -9,8 +10,11 @@ from sqlalchemy import (
     )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.db import Base
-from auth.models import User
-from rooms.models import Room
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from rooms.models import Room  # only imported during type checking, not at runtime
+
 
  
 class Building(Base):
@@ -22,8 +26,8 @@ class Building(Base):
     address: Mapped[str] = mapped_column(String(500), nullable=False)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
     state: Mapped[str] = mapped_column(String(100), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
     
     rooms: Mapped[list["Room"]] = relationship("Room", back_populates="building", cascade="all, delete-orphan")
  

@@ -19,7 +19,7 @@ class RegisterResponse(AuthBase):
  
     
 class LoginRequest(AuthBase):
-    phone: EmailStr
+    phone: str
     otp: str = Field(min_length=6, max_length=6)
 
 class LoginResponse(AuthBase):
