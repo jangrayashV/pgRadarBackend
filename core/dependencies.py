@@ -26,11 +26,11 @@ async def get_current_user(token: HTTPAuthorizationCredentials = Depends(bearer_
 
 
 async def require_owner(user: dict = Depends(get_current_user)) -> dict:
-    if user.role!= "owner":
+    if user["role"]!= "owner":
         raise HTTPException(403, "Owners only")
     return user
 
 async def require_tenant(user: dict = Depends(get_current_user)) -> dict:
-    if user.role != "tenant":
+    if user["role"] != "tenant":
         raise HTTPException(403, "Tenants only")
     return user
