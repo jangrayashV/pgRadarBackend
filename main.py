@@ -16,6 +16,17 @@ import logging
 from core.rate_limiter import limiter
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "https://pgradar.lovable.app/",
+
+]
+
+
+
+
  
 logging.basicConfig(
     level=logging.INFO,
@@ -111,6 +122,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
  
+ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,   # if using cookies
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.state.limiter = limiter
 

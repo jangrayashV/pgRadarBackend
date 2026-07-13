@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
 from auth.schemas import RegisterRequest, RegisterResponse, LoginRequest, LoginResponse,VerificationCodeRequest, VerificationCodeResponse, LogoutResponse, UserResponse
@@ -38,6 +38,7 @@ async def request_otp(cred: VerificationCodeRequest, request: Request, db: Async
 @router.post("/login", response_model=LoginResponse)
 async def login(
     body: LoginRequest,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ) -> LoginResponse:
     service = AuthService(db)
@@ -45,7 +46,22 @@ async def login(
         phone=body.phone,
         otp=body.otp,
     )
-    # _set_auth_cookies(response, access_token, refresh_token)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        samesite="strict",
+        secure=False,       # True in production (HTTPS only)
+        max_age=15 * 60,    # 15 minutes
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        samesite="strict",
+        secure=False,
+        max_age=7 * 24 * 60 * 60,  # 7 days
+    )
     return LoginResponse(
         access_token=access_token,
         message="Login successful."
