@@ -20,11 +20,10 @@ from apscheduler.triggers.cron import CronTrigger
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
-    "https://pgradar.lovable.app/",
-
+    "https://pgradar.lovable.app",
+    "https://id-preview--ea5877ab-014a-4693-b3eb-b192cad15399.lovable.app",
+    "https://ea5877ab-014a-4693-b3eb-b192cad15399.lovableproject.com",
 ]
-
-
 
 
  
