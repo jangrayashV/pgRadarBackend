@@ -52,16 +52,16 @@ async def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        samesite="strict",
-        secure=False,       # True in production (HTTPS only)
+        samesite="none",
+        secure=True,       # True in production (HTTPS only)
         max_age=15 * 60,    # 15 minutes
     )
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        samesite="strict",
-        secure=False,
+        samesite="none",
+        secure=True,
         max_age=7 * 24 * 60 * 60,  # 7 days
     )
     return LoginResponse(
