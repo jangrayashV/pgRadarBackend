@@ -81,14 +81,29 @@ async def get_me(
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
+    response: Response,
     user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_db)
 ) -> LogoutResponse:
     service = AuthService(db)
-    print("---------------------------------------------------------------------------------",type(user))
     jti = user.get("jti")
     if jti:
         await service.logout(jti)
-    # _clear_auth_cookies(response)
+    
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        secure=True,
+        samesite="none",
+    )
+    response.delete_cookie(
+        key="refresh_token",
+        path="/",
+        httponly=True,
+        secure=True,
+        samesite="none",
+    )
+    
     return LogoutResponse(message="Logged out successfully.")
  
