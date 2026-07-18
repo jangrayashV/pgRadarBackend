@@ -1,6 +1,6 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer, HTTPAuthorizationCredentials
-from sqlalchemy import Select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
 from core.db import get_db
@@ -11,19 +11,45 @@ from fastapi.security import HTTPBearer
 bearer_scheme = HTTPBearer()
 
 
-async def get_current_user(token: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)):
-    payload = verify_access_token(token.credentials)
-    print("----------------------------------------------------payload------------------------------------------", payload)
+# async def get_current_user(token: HTTPAuthorizationCredentials = Depends(bearer_scheme), db: AsyncSession = Depends(get_db)):
+#     payload = verify_access_token(token.credentials)
+#     print("----------------------------------------------------payload------------------------------------------", payload)
+#     sub = payload.get("sub")
+#     if not sub:
+#         raise TokenError("Token missing subject claim")
+    
+#     result = await db.execute(Select(User).where(User.id == sub))
+#     user = result.scalar_one_or_none()
+#     if not user:
+#         raise TokenError("User not found")  
+#     return payload 
+
+
+
+async def get_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise TokenError("Access token missing")
+
+    payload = verify_access_token(token)
+
     sub = payload.get("sub")
     if not sub:
         raise TokenError("Token missing subject claim")
-    
-    result = await db.execute(Select(User).where(User.id == sub))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise TokenError("User not found")  
-    return payload 
 
+    result = await db.execute(
+        select(User).where(User.id == sub)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise TokenError("User not found")
+
+    return payload
 
 async def require_owner(user: dict = Depends(get_current_user)) -> dict:
     if user["role"]!= "owner":
