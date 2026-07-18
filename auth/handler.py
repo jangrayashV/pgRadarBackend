@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from auth.models import User
@@ -68,6 +70,14 @@ async def login(
     )
 
 
+@router.get("/me", response_model=UserResponse)
+async def get_me(
+    user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    service = AuthService(db)
+    user_obj = await service.get_me(uuid.UUID(user["sub"]))
+    return UserResponse.model_validate(user_obj)
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(

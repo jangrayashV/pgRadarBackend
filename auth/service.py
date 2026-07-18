@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
  
 from sqlalchemy.ext.asyncio import AsyncSession
  
-from auth.models import UserRole
+from auth.models import User, UserRole
 from auth.repository import AuthRepository
 from auth.utils.auth_utils import hash_otp, verify_otp
 from auth.utils.sms_utils import generate_otp, send_otp
@@ -191,4 +191,8 @@ class AuthService:
         
         return verification_code
         
-   
+    async def get_me(self, user_id: uuid.UUID) -> User:
+        user = await self.repo.get_by_id(user_id)
+        if not user:
+            raise NotFoundError("User not found")
+        return user
