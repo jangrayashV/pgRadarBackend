@@ -16,7 +16,7 @@ import logging
 from core.rate_limiter import limiter
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-
+from core.exceptions import AppError
 from fastapi.middleware.cors import CORSMiddleware
 
 origins = [
@@ -121,6 +121,31 @@ app = FastAPI(
     lifespan=lifespan,
 )
  
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(AppError)
+async def app_error_handler(request, exc: AppError):
+    logger.warning("AppError: %s | code: %s | status: %s", str(exc), exc.code, exc.status_code)
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": str(exc), "code": exc.code},
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "code": "validation_error"},
+    )
+
+@app.exception_handler(Exception)
+async def unhandled_error_handler(request, exc: Exception):
+    logger.error("Unhandled exception: %s", str(exc), exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "code": "internal_error"},
+    )
  
 app.add_middleware(
     CORSMiddleware,
