@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import text
-import sys
 from core.db import engine
 from core.db import Base
 from auth import models as auth_models
@@ -19,8 +18,6 @@ from apscheduler.triggers.cron import CronTrigger
 from core.exceptions import AppError
 from fastapi.middleware.cors import CORSMiddleware
 
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 origins = [
     "https://pgradar.lovable.app",
     "https://id-preview--ea5877ab-014a-4693-b3eb-b192cad15399.lovable.app",
@@ -31,9 +28,7 @@ origins = [
  
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    stream=sys.stdout, 
-    force=True,    
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",   
 )
 logger = logging.getLogger(__name__)
  
@@ -127,34 +122,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,   # if using cookies
+    allow_credentials=True, 
     allow_methods=["*"],
     allow_headers=["*"],
 )
- 
-
-@app.exception_handler(AppError)
-async def app_error_handler(request, exc: AppError):
-    logger.warning("AppError: %s | code: %s | status: %s", str(exc), exc.code, exc.status_code)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": str(exc), "code": exc.code},
-    )
-
-@app.exception_handler(RequestValidationError)
-async def validation_error_handler(request, exc: RequestValidationError):
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors(), "code": "validation_error"},
-    )
-
-@app.exception_handler(Exception)
-async def unhandled_error_handler(request, exc: Exception):
-    logger.error("Unhandled exception: %s", str(exc), exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error", "code": "internal_error"},
-    )
  
 
 
